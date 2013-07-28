@@ -6,6 +6,7 @@ var JsNibbles = function() {
     var appleSkip = 0;
     var moveSize = 10;
     var speed = 100;
+    var speedDivider = 2;
     var dir = "right";
     var isPaused = false;
     var isRunning = false;
@@ -14,6 +15,8 @@ var JsNibbles = function() {
     var levelBlocks = new Array();
     var level = 1;
     var startAt = {};
+    var lives = 3;
+    var levelPoints = 0;
     var soundEaten = document.createElement('audio');
     soundEaten.setAttribute('src', 'sounds/eat.mp3');
     var soundDead = document.createElement('audio');
@@ -23,24 +26,8 @@ var JsNibbles = function() {
         boardWidth = $('.board').width();
         boardHeight = $('.board').height();
         // TODO: This needs to setup the game.
+        setSpeed(speed);
         start();
-    };
-    
-    var reset = function() {
-        apples = 5;
-        skipMoves = 0;
-        apple = null;
-        appleSkip = 0;
-        moveSize = 10;
-        speed = 100;
-        dir = "right";
-        isPaused = false;
-        isRunning = false;
-        boardHeight = 0;
-        boardWidth = 0;
-        levelBlocks = new Array();
-        level = 1;
-        startAt = {};
     };
 
     var start = function() {
@@ -56,6 +43,7 @@ var JsNibbles = function() {
         } else {
             $('.myname').text("Sammy");
         }
+        $('.lives').text(lives);
         dir = "right";
         isPaused = true;
         isRunning = true;
@@ -101,20 +89,37 @@ var JsNibbles = function() {
         }
     };
     
+    var getSpeedForLevel = function(l) {
+        if (l == 1) {
+            return 100;
+        } else if (l == 2) {
+            return 90;
+        } else if (l == 3) {
+            return 80;
+        } else if (l == 4) {
+            return 80;
+        }
+        
+        return 100;
+    };
+    
     /**
      * Set up the level obstacles and settings.
      */
     var setupLevel = function(l) {
+        levelPoints = 0;
         var lvl = l; // Emulate a level change here. 
         apple = null;
         if (lvl == 1) {
+            speedDivider = 2;
             apples = 5;
             startAt = {t:240,l:480};
-            speed = 100; // Variable speed?
+            speed = getSpeedForLevel(lvl);
             levelBlocks = new Array();
         } else if (lvl == 2) {
+            speedDivider = 2;
             apples = 15;
-            speed = 100; // Variable speed?
+            speed = getSpeedForLevel(lvl);
             levelBlocks = new Array();
             startAt = {t:120,l:480};
             var i = 0;
@@ -126,8 +131,9 @@ var JsNibbles = function() {
                 i++;
             }
         } else if (lvl == 3) {
+            speedDivider = 2;
             apples = 30;
-            speed = 100; // Variable speed?
+            speed = getSpeedForLevel(lvl);
             levelBlocks = new Array();
             startAt = {t:20,l:150};
             var i = 0;
@@ -141,8 +147,9 @@ var JsNibbles = function() {
                 i++;
             }
         } else if (lvl == 4) {
+            speedDivider = 2;
             apples = 45;
-            speed = 100; // Variable speed?
+            speed = getSpeedForLevel(lvl);
             levelBlocks = new Array();
             startAt = {t:20,l:150};
             var i = 0;
@@ -174,7 +181,8 @@ var JsNibbles = function() {
             var b = levelBlocks[i];
             $('.board').append('<div class="wall" style="top:'+b.t+'px;left:'+b.l+'px;" />');
         }
-        
+
+        setSpeed(speed);
         $('.level').text(lvl);
         level = lvl;
         var t = startAt.t;
@@ -188,8 +196,29 @@ var JsNibbles = function() {
         }
     };
     
+    var restartLevel = function() {
+        var c = $('.points').text();
+        $('.points').text(parseInt(c) - levelPoints);
+        speed = getSpeedForLevel(level);
+        setSpeed(speed);
+        levelPoints = 0;
+        $('.board .body').remove();
+        isRunning = true;
+        dir = 'right';
+        $('.lives').text(lives);
+        var t = startAt.t;
+        var l = startAt.l;
+        $('.board').append('<div class="body" style="top:'+t+'px;left:'+l+'px;" />');
+        var i=0;
+        while(i<5) {
+            l=l-moveSize;
+            $('.board').append('<div class="body" style="top:'+t+'px;left:'+l+'px;" />');
+            i++;
+        }
+    };
+    
     var complete = function() {
-        var c = confirm('You won! Want to play again?');
+        alert('You won! Want to play again?');
         window.location = window.location.href;
     };
     
@@ -198,7 +227,7 @@ var JsNibbles = function() {
         if (isRunning != true || isPaused != false) {
             setTimeout(function(){
                 move();
-            }, 100);
+            }, speed);
             return;
         }
         
@@ -253,6 +282,7 @@ var JsNibbles = function() {
         }
         ateApple();
         collision();
+
         setTimeout(function() {
             return move();
         }, speed);
@@ -271,12 +301,12 @@ var JsNibbles = function() {
             MaxX = parseInt((MaxX - 10));
             var randomX = Math.round(Math.floor(Math.random() * (MaxX - 0 + 1)) / 10) * 10;
             var randomY = Math.round(Math.floor(Math.random() * (MaxY - 0 + 1)) / 10) * 10;
-            if (positionHitsWall({top:randomY,left:randomX}) != true) {
+            var test = {top:randomY,left:randomX};
+            if (positionHitsWall(test) != true && positionHitsBody(test) != true) {
                 apple = {t:randomY,l:randomX};
                 $('.board').append('<div class="fruit" style="top:' + randomY + 'px;left:' + randomX + 'px;" />');
             } else {
-                ateApple();
-                return;
+                return ateApple();
             }
         } else {
             var fL = apple.l;
@@ -293,9 +323,9 @@ var JsNibbles = function() {
                 
                 var c = $('.points').text();
                 $('.points').text(parseInt(c) + 1);
-                if ((parseInt(c) + 1) % 5 === 0) {
+                if ((parseInt(c) + 1) % speedDivider === 0) {
                     speed = speed - 5;
-                    $('.speed').text(speed);
+                    setSpeed(speed);
                 }
                 
                 var l = $('.level').text();
@@ -307,6 +337,7 @@ var JsNibbles = function() {
                 appleSkip = 5;
                 apple = null;
                 skipMoves = skipMoves + (parseInt(l) * 4);
+                levelPoints++;
             }
             
             if ($('.fruit').is('.fruit-on')) {
@@ -315,6 +346,11 @@ var JsNibbles = function() {
                 $('.fruit').addClass('fruit-on');
             }
         }
+    };
+    
+    var setSpeed = function(n) {
+        var x = 100 - n;
+        $('.speed').text(x);
     };
     
     var clearBoardForNewLevel = function(newLevel) {
@@ -346,7 +382,7 @@ var JsNibbles = function() {
         // Collision with level obstacles.
         if (positionHitsWall(bPos) == true) {
             died();
-            return
+            return;
         }
         for (var i=0;i<levelBlocks.length;i++) {
             var b = levelBlocks[i];
@@ -360,14 +396,27 @@ var JsNibbles = function() {
     };
     
     var positionHitsWall = function(pos) {
+
         for (var i=0;i<levelBlocks.length;i++) {
             var b = levelBlocks[i];
             if (b.t == pos.top && b.l == pos.left) {
-                return true;
+                return false;
             }
         }
-        
         return false;
+    };
+    
+    var positionHitsBody = function(pos) {
+        var ret = false;
+        
+        $('.body').each(function(){
+            var uno = $(this).position();
+            if (uno.top == pos.top && uno.left == pos.left) {
+                ret = true;
+            }
+        });
+        
+        return ret;
     };
     
     var died = function() {
@@ -375,12 +424,17 @@ var JsNibbles = function() {
         $('.block').first().remove();
         soundDead.play();
         setTimeout(function(){
-            var t = confirm('You died! Try again?');
-            if (t) {
-                // return restart();
-                window.location.href = window.location;
-            };
-        }, 300);
+            if (lives > 0) {
+                lives--;
+                restartLevel();
+            } else {
+                var t = confirm('You died! Try again?');
+                if (t) {
+                    // return restart();
+                    window.location.href = window.location;
+                };
+            }
+        }, 3000);
     };
 
     var keyListener = function() {
