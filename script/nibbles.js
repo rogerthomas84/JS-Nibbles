@@ -271,8 +271,8 @@ var JsNibbles = function() {
             MaxX = parseInt((MaxX - 10));
             var randomX = Math.round(Math.floor(Math.random() * (MaxX - 0 + 1)) / 10) * 10;
             var randomY = Math.round(Math.floor(Math.random() * (MaxY - 0 + 1)) / 10) * 10;
-            apple = {t:randomY,l:randomX};
             if (positionHitsWall({top:randomY,left:randomX}) != true) {
+                apple = {t:randomY,l:randomX};
                 $('.board').append('<div class="fruit" style="top:' + randomY + 'px;left:' + randomX + 'px;" />');
             } else {
                 ateApple();
