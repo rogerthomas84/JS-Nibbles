@@ -14,6 +14,7 @@ var JsNibbles = function() {
     var boardWidth = 0;
     var levelBlocks = new Array();
     var level = 1;
+    var points = 0;
     var startAt = {};
     var lives = 3;
     var levelPoints = 0;
@@ -27,6 +28,7 @@ var JsNibbles = function() {
         boardHeight = $('.board').height();
         // TODO: This needs to setup the game.
         setSpeed(speed);
+        setPoints(points);
         start();
     };
 
@@ -183,8 +185,7 @@ var JsNibbles = function() {
         }
 
         setSpeed(speed);
-        $('.level').text(lvl);
-        level = lvl;
+        setLevel(lvl);
         var t = startAt.t;
         var l = startAt.l;
         $('.board').append('<div class="body" style="top:'+t+'px;left:'+l+'px;" />');
@@ -196,9 +197,13 @@ var JsNibbles = function() {
         }
     };
     
+    var setLevel = function(l) {
+        level = l;
+        $('.level').text(l);
+    }
+    
     var restartLevel = function() {
-        var c = $('.points').text();
-        $('.points').text(parseInt(c) - levelPoints);
+        setPoints((points - levelPoints));
         speed = getSpeedForLevel(level);
         setSpeed(speed);
         levelPoints = 0;
@@ -321,22 +326,20 @@ var JsNibbles = function() {
                 soundEaten.play();
                 $('.fruit').remove();
                 
-                var c = $('.points').text();
-                $('.points').text(parseInt(c) + 1);
-                if ((parseInt(c) + 1) % speedDivider === 0) {
+                var newPoints = (points + 1);
+                setPoints(newPoints);
+                if (newPoints % speedDivider === 0) {
                     speed = speed - 5;
                     setSpeed(speed);
                 }
                 
-                var l = $('.level').text();
-                
-                if ((parseInt(c) + 1) == apples) {
-                    clearBoardForNewLevel(parseInt(l) + 1);
+                if (newPoints == apples) {
+                    clearBoardForNewLevel(level + 1);
                     return;
                 }
                 appleSkip = 5;
                 apple = null;
-                skipMoves = skipMoves + (parseInt(l) * 4);
+                skipMoves = skipMoves + (level * 4);
                 levelPoints++;
             }
             
@@ -351,6 +354,11 @@ var JsNibbles = function() {
     var setSpeed = function(n) {
         var x = 100 - n;
         $('.speed').text(x);
+    };
+    
+    var setPoints = function(p) {
+        points = p;
+        $('.points').text(points);
     };
     
     var clearBoardForNewLevel = function(newLevel) {
