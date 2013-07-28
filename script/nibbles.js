@@ -41,11 +41,11 @@ var JsNibbles = function() {
         keyListener();
         var name=prompt("Please enter your name","");
         if (name!=null && name!="") {
-            $('.myname').text(name);
+            setName(name);
         } else {
-            $('.myname').text("Sammy");
+            setName("Sammy");
         }
-        $('.lives').text(lives);
+        setLives(lives);
         dir = "right";
         isPaused = true;
         isRunning = true;
@@ -53,6 +53,10 @@ var JsNibbles = function() {
         givePaused();
         flashPaused();
         return;
+    };
+    
+    var setName = function(n) {
+        $('.myname').text(n);
     };
     
     var givePaused = function() {
@@ -197,11 +201,6 @@ var JsNibbles = function() {
         }
     };
     
-    var setLevel = function(l) {
-        level = l;
-        $('.level').text(l);
-    }
-    
     var restartLevel = function() {
         setPoints((points - levelPoints));
         speed = getSpeedForLevel(level);
@@ -210,7 +209,7 @@ var JsNibbles = function() {
         $('.board .body').remove();
         isRunning = true;
         dir = 'right';
-        $('.lives').text(lives);
+        setLives(lives);
         var t = startAt.t;
         var l = startAt.l;
         $('.board').append('<div class="body" style="top:'+t+'px;left:'+l+'px;" />');
@@ -351,6 +350,11 @@ var JsNibbles = function() {
         }
     };
     
+    var setLevel = function(l) {
+        level = l;
+        $('.level').text(l);
+    };
+    
     var setSpeed = function(n) {
         var x = 100 - n;
         $('.speed').text(x);
@@ -359,6 +363,11 @@ var JsNibbles = function() {
     var setPoints = function(p) {
         points = p;
         $('.points').text(points);
+    };
+    
+    var setLives = function(l) {
+        lives = l;
+        $('.lives').text(l);
     };
     
     var clearBoardForNewLevel = function(newLevel) {
